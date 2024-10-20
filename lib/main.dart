@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:voice_assistance_flutter/pages/homePage.dart';
+import 'package:voice_assistance_flutter/pages/splashPage.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(VoiceBotApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
+class VoiceBotApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Voice Bot',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.deepPurple,
       ),
-      home: const Text("voice bot"),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => SplashScreen(),  // Set the splash screen as the initial route
+        '/home': (context) => VoiceBotHomePage(),  // Define your home screen route
+      },
     );
   }
 }
