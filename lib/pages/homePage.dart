@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:voice_assistance_flutter/services/llama_api_service.dart';
 import 'package:voice_assistance_flutter/services/voice_assistant.dart';
@@ -88,15 +89,12 @@ class _VoiceBotHomePageState extends State<VoiceBotHomePage> {
         title: Row(
           children: [
             CircleAvatar(
-              radius: 15,
               backgroundColor: Colors.transparent,
-              child: ClipOval(
-                child: SizedBox(
-                  height: _deviceHeight * 0.2,
-                  child: Image.asset(
-                    'assets/images/SplashLogo-removebg.png',
-                    fit: BoxFit.contain,
-                  ),
+              child: SizedBox(
+                height: _deviceHeight * 0.2,
+                child: Image.asset(
+                  'assets/images/SplashLogo-removebg.png',
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
@@ -122,8 +120,31 @@ class _VoiceBotHomePageState extends State<VoiceBotHomePage> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              itemCount: messages.length + (isWaitingForBotResponse ? 1 : 0),
+              itemCount: messages.length +
+                  (isWaitingForBotResponse || isListening ? 1 : 0),
               itemBuilder: (context, index) {
+                if (isListening && index == messages.length) {
+                  return Align(
+                    alignment: Alignment.centerRight,
+                    child: ChatBubble(
+                      alignment: Alignment.centerRight,
+                      elevation: 5,
+                      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                      backGroundColor: Color(0xFF1B97F3),
+                      clipper: ChatBubbleClipper3(type: BubbleType.sendBubble),
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.2,
+                        ),
+                        child: SpinKitThreeBounce(
+                          color: Colors.black,
+                          size: _deviceHeight * 0.020,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 if (isWaitingForBotResponse && index == messages.length) {
                   return Align(
                     alignment: Alignment.centerLeft,
@@ -134,19 +155,15 @@ class _VoiceBotHomePageState extends State<VoiceBotHomePage> {
                         children: [
                           CircleAvatar(
                             backgroundColor: Colors.transparent,
-                            child: ClipOval(
-                              child: SizedBox(
-                                height: _deviceHeight * 0.03,
-                                child: Image.asset(
-                                  'assets/images/SplashLogo-removebg.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
+                            child: Image.asset(
+                              'assets/images/SplashLogo-removebg.png',
+                              fit: BoxFit.contain,
                             ),
                           ),
+                          SizedBox(width: 20),
                           SpinKitThreeBounce(
                             color: Colors.deepPurple,
-                            size: _deviceHeight * 0.010,
+                            size: _deviceHeight * 0.020,
                           ),
                         ],
                       ),
@@ -169,38 +186,62 @@ class _VoiceBotHomePageState extends State<VoiceBotHomePage> {
                       if (!isUserMessage)
                         CircleAvatar(
                           backgroundColor: Colors.transparent,
-                          child: ClipOval(
-                            child: SizedBox(
-                              height: _deviceHeight * 0.03,
-                              child: Image.asset(
-                                'assets/images/SplashLogo-removebg.png',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
+                          child: Image.asset(
+                            'assets/images/SplashLogo-removebg.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                       Container(
-                        margin: EdgeInsets.symmetric(
-                          vertical: 5,
-                          horizontal: 0,
-                        ),
-                        child: isUserMessage
-                            ? BubbleSpecialThree(
-                                text: messages[index]["user"] ?? '',
-                                color: Color(0xFF1B97F3),
-                                tail: true,
-                                textStyle: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              )
-                            : BubbleSpecialOne(
-                                text: messages[index]["bot"] ?? '',
-                                color: Colors.grey[200]!,
-                                tail: true,
-                                isSender: false,
-                                textStyle: TextStyle(
-                                    color: Colors.black, fontSize: 16),
-                              ),
-                      ),
+                          child: isUserMessage
+                              ? ChatBubble(
+                                  elevation: 5,
+                                  margin: EdgeInsets.symmetric(
+                                      vertical: 6, horizontal: 4),
+                                  backGroundColor: Color(0xFF1B97F3),
+                                  clipper: ChatBubbleClipper3(
+                                      type: BubbleType.sendBubble),
+                                  child: Container(
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width *
+                                              0.7,
+                                    ),
+                                    child: Text(
+                                      messages[index]["user"] ?? '',
+                                      style: TextStyle(
+                                          color: Colors.black, fontSize: 16),
+                                    ),
+                                  ),
+                                )
+                              : ChatBubble(
+                                  elevation: 5,
+                                  margin: EdgeInsets.symmetric(vertical: 6),
+                                  backGroundColor: Colors.grey[200]!,
+                                  clipper: ChatBubbleClipper8(
+                                      type: BubbleType.receiverBubble),
+                                  child: Container(
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width *
+                                              0.7,
+                                    ),
+                                    child: Text(
+                                      messages[index]["bot"] ?? '',
+                                      style: TextStyle(
+                                          color: Colors.black, fontSize: 16),
+                                    ),
+                                  ),
+                                )
+
+                          // BubbleSpecialOne(
+                          //     text: messages[index]["bot"] ?? '',
+                          //     color: Colors.grey[200]!,
+                          //     tail: true,
+                          //     isSender: false,
+                          //     textStyle: TextStyle(
+                          //         color: Colors.black, fontSize: 16),
+                          //   ),
+                          ),
                     ],
                   ),
                 );
@@ -208,11 +249,12 @@ class _VoiceBotHomePageState extends State<VoiceBotHomePage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: ElevatedButton.icon(
               onPressed: isListening ? null : handleVoiceInput,
-              icon: Icon(isListening ? Icons.mic_off : Icons.mic),
-              label: Text(isListening ? 'Listening...' : 'Start Listening'),
+              label: Container(
+                child: isListening ? Icon(Icons.mic_off) : Icon(Icons.mic),
+              ),
             ),
           ),
         ],

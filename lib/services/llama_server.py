@@ -1,23 +1,44 @@
+import subprocess
 from flask import Flask, request, jsonify
-import torch
-from transformers import LlamaForCausalLM, LlamaTokenizer
 
 app = Flask(__name__)
-
-# Load LLaMA model and tokenizer
-model_name = "your-llama-model-path"
-model = LlamaForCausalLM.from_pretrained(model_name)
-tokenizer = LlamaTokenizer.from_pretrained(model_name)
-
+8
 @app.route('/generate', methods=['POST'])
 def generate_response():
-    input_data = request.json['input']
-    inputs = tokenizer(input_data, return_tensors="pt")
+    input_text = request.json.get('input')
     
-    outputs = model.generate(**inputs, max_new_tokens=100)
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    # Validate input
+    if not input_text:
+        return jsonify({"error": "Input text is required"}), 400
 
-    return jsonify({"response": response})
+    # Call the LLaMA model using subprocess
+    process = subprocess.Popen(
+        ['ollama', 'run', 'llama3.2'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding='utf-8'  # Ensure output is encoded as utf-8
+    )
+
+    try:
+        # Send the input_text to the LLaMA model
+        stdout, stderr = process.communicate(input=f"{input_text}\n")
+        
+        # Check for errors in the subprocess
+        if process.returncode != 0:
+            return jsonify({"error": stderr.strip()}), 500
+        
+        # Extract LLaMA's response
+        response_lines = stdout.strip().splitlines()
+        response = response_lines[-1] if response_lines else "No response received"
+
+        return jsonify({"response": response})
+
+    except UnicodeDecodeError as e:
+        return jsonify({"error": f"Unicode decode error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
