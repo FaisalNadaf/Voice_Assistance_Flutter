@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LLaMAApiService {
-  final String apiUrl = 'http://192.168.1.8:5000/generate';
+  final String apiUrl = 'http://{Your Ip address}/generate';
 
   Future<String> getLLaMAResponse(String inputText) async {
     try {
